@@ -85,7 +85,7 @@ pipeline {
                 // TODO: Expose the ${APP_NAME} service for external access
 		sh '''
 			oc new-app --as-deployment-config --name ${APP_NAME} -i ${DEV_PROJECT}/${APP_NAME}:latest -n ${DEV_PROJECT}
-			oc expose svc/${APP_NAME}
+			oc expose svc/${APP_NAME} -n ${DEV_PROJECT}
 		   '''
             }
         }
@@ -114,7 +114,9 @@ pipeline {
                 script {
                     openshift.withCluster() {
                     // TODO: Tag the ${APP_NAME}:latest image stream in the dev env as ${APP_NAME}:stage in staging
-			openshift.tag("${DEV_PROJECT}/${APP_NAME}:latest", "${STAGE_PROJECT}/${APP_NAME}:stage")
+			openshift.withProject("${STAGE_PROJECT}") {
+			  openshift.tag("${DEV_PROJECT}/${APP_NAME}:latest", "${STAGE_PROJECT}/${APP_NAME}:stage")
+			}
                     }
                 }
             }
@@ -133,7 +135,7 @@ pipeline {
                 // TODO: Create a new app in staging and expose the service
 		sh '''
 			oc new-app --as-deployment-config --name ${APP_NAME} -i ${STAGE_PROJECT}/${APP_NAME}:stage -n ${STAGE_PROJECT}
-			oc expose svc/${APP_NAME}
+			oc expose svc/${APP_NAME} -n ${STAGE_PROJECT}
 		   '''
             }
         }
